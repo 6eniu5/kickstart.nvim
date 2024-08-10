@@ -613,6 +613,16 @@ require('lazy').setup({
 
         stylua = {}, -- Used to format Lua code
 
+        clangd = {
+          cmd = { 'clangd', '--compile-commands-dir=./build' },
+          on_attach = function(client, bufnr)
+            -- Your on_attach functions here
+          end,
+        },
+
+        -- CMake configuration
+        cmake = {},
+
         -- Special Lua Config, as recommended by neovim help docs
         lua_ls = {
           on_init = function(client)
