@@ -606,10 +606,18 @@ require('lazy').setup({
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client:supports_method('textDocument/documentHighlight', event.buf) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+            local is_real_file_buffer = function(bufnr)
+              if vim.bo[bufnr].buftype ~= '' then return false end
+              local name = vim.api.nvim_buf_get_name(bufnr)
+              return name ~= ''
+            end
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
               group = highlight_augroup,
-              callback = vim.lsp.buf.document_highlight,
+              callback = function()
+                if not is_real_file_buffer(event.buf) then return end
+                vim.lsp.buf.document_highlight()
+              end,
             })
 
             vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
@@ -657,6 +665,9 @@ require('lazy').setup({
 
         clangd = {
           cmd = { 'clangd', '--compile-commands-dir=./build' },
+          filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'proto' },
+          root_markers = { 'compile_commands.json', 'compile_flags.txt', '.clangd', '.git' },
+          single_file_support = false,
           on_attach = function(client, bufnr)
             -- Your on_attach functions here
           end,
@@ -927,7 +938,11 @@ require('lazy').setup({
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
     config = function()
       local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
-      require('nvim-treesitter').install(parsers)
+      require('nvim-treesitter.configs').setup {
+        ensure_installed = parsers,
+        highlight = { enable = true },
+        indent = { enable = true },
+      }
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
           local buf, filetype = args.buf, args.match
