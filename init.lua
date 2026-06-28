@@ -676,6 +676,9 @@ require('lazy').setup({
         -- CMake configuration
         cmake = {},
 
+        -- Go: gopls is installed by Mason (mason-lspconfig + mason-tool-installer).
+        gopls = {},
+
         -- Special Lua Config, as recommended by neovim help docs
         lua_ls = {
           on_init = function(client)
@@ -716,6 +719,7 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         -- You can add other tools here that you want Mason to install
+        'goimports', -- Go formatter/import organizer used by conform below
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -759,6 +763,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        go = { 'goimports', 'gofmt' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -937,12 +942,12 @@ require('lazy').setup({
     branch = 'main',
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
     config = function()
-      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
-      require('nvim-treesitter.configs').setup {
-        ensure_installed = parsers,
-        highlight = { enable = true },
-        indent = { enable = true },
-      }
+      -- main-branch nvim-treesitter API (matches `branch = 'main'` above).
+      -- NOTE: do NOT use `require('nvim-treesitter.configs').setup` here — that
+      -- module only exists on the old `master` branch and errors on `main`.
+      -- Highlight + indent are enabled by the FileType autocmd below.
+      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'go', 'gomod', 'gosum', 'gowork' }
+      require('nvim-treesitter').install(parsers)
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
           local buf, filetype = args.buf, args.match
