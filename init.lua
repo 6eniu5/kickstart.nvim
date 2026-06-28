@@ -756,7 +756,9 @@ require('lazy').setup({
           return nil
         else
           return {
-            timeout_ms = 500,
+            -- goimports can shell out to `go` for import resolution; on a cold
+            -- module cache the first save easily exceeds 500ms, so give it room.
+            timeout_ms = 3000,
             lsp_format = 'fallback',
           }
         end
