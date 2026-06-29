@@ -679,6 +679,10 @@ require('lazy').setup({
         -- Go: gopls is installed by Mason (mason-lspconfig + mason-tool-installer).
         gopls = {},
 
+        -- Rust: rust-analyzer is installed by Mason. Toolchain (rustc/cargo/
+        -- rustfmt) comes from rustup; see setup.sh run_rustup_default_toolchain.
+        rust_analyzer = {},
+
         -- Special Lua Config, as recommended by neovim help docs
         lua_ls = {
           on_init = function(client)
@@ -766,6 +770,8 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         go = { 'goimports', 'gofmt' },
+        -- rustfmt ships with the rustup stable toolchain (on ~/.cargo/bin).
+        rust = { 'rustfmt' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -948,7 +954,7 @@ require('lazy').setup({
       -- NOTE: do NOT use `require('nvim-treesitter.configs').setup` here — that
       -- module only exists on the old `master` branch and errors on `main`.
       -- Highlight + indent are enabled by the FileType autocmd below.
-      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'go', 'gomod', 'gosum', 'gowork' }
+      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'go', 'gomod', 'gosum', 'gowork', 'rust' }
       require('nvim-treesitter').install(parsers)
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
