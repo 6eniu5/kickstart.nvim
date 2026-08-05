@@ -957,7 +957,16 @@ require('lazy').setup({
       -- Highlight + indent are enabled by the FileType autocmd below.
       -- `yaml` is here for render-markdown.nvim's frontmatter rendering, not for
       -- editing yaml files; drop it and Obsidian notes show raw frontmatter.
-      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'go', 'gomod', 'gosum', 'gowork', 'rust', 'yaml' }
+      -- On `main`, install() is what puts BOTH the parser and its queries under
+      -- stdpath('data')/site. A language missing from this list gets neither, so
+      -- this list — not the plugin's own runtime/queries — is what decides whether
+      -- a filetype highlights at all.
+      local parsers = {
+        'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline',
+        'query', 'vim', 'vimdoc', 'go', 'gomod', 'gosum', 'gowork', 'rust', 'yaml',
+        'javascript', 'typescript', 'tsx', 'json', 'css', 'python', 'xml', 'vue',
+        'angular', 'terraform', 'ini', 'perl', 'tmux', 'git_config', 'gitignore',
+      }
       require('nvim-treesitter').install(parsers)
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
@@ -968,6 +977,16 @@ require('lazy').setup({
 
           -- check if parser exists and load it
           if not vim.treesitter.language.add(language) then return end
+
+          -- ...and that its highlight QUERIES resolve. A parser alone is not enough:
+          -- vim.treesitter.start() below also switches off the legacy `:syntax`
+          -- highlighter, so starting it with no queries yields a buffer with no
+          -- highlighting from either engine — flat text that looks like a broken
+          -- colorscheme rather than a missing parser. Bailing here instead keeps
+          -- the legacy fallback, which is worse than treesitter but far better
+          -- than nothing.
+          if not vim.treesitter.query.get(language, 'highlights') then return end
+
           -- enables syntax highlighting and other treesitter features
           vim.treesitter.start(buf, language)
 
